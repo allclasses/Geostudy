@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Global Pins Challenge</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      padding: 1em;
+      background-color: #4caf50;
+      color: white;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #clue-box {
+      margin: 1em;
+      padding: 1em;
+      background-color: #fff;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 600px;
+      text-align: center;
+    }
+    #map {
+      height: 500px;
+      width: 90%;
+      max-width: 1000px;
+      margin-bottom: 2em;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+    }
+    button {
+      padding: 0.5em 1em;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    footer {
+      text-align: center;
+      padding: 1em;
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌍 Global Pins Challenge</h1>
+    <p>Click the map to guess the location!</p>
+  </header>
+
+  <main>
+    <div id="clue-box">
+      <h2 id="location-name">Click "Start Game" to begin!</h2>
+      <p id="clue-text"></p>
+      <button onclick="nextClue()">Start Game</button>
+    </div>
+    <div id="map"></div>
+  </main>
+
+  <footer>
+    <p>Created for educational fun 🌎</p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const clues = [
+      { name: "Mexico", clue: "Famous for tacos, mariachi, and Aztec ruins.", lat: 23.6345, lng: -102.5528 },
+      { name: "Brazil", clue: "Home to the Amazon rainforest and Rio de Janeiro.", lat: -14.2350, lng: -51.9253 },
+      { name: "Chile", clue: "Long, narrow country with the Atacama Desert.", lat: -35.6751, lng: -71.5430 },
+      { name: "India", clue: "Known for the Taj Mahal and Bollywood.", lat: 20.5937, lng: 78.9629 },
+      { name: "China", clue: "The Great Wall winds through this vast country.", lat: 35.8617, lng: 104.1954 },
+      { name: "Hawaii", clue: "U.S. island state with volcanoes and surfing.", lat: 19.8968, lng: -155.5828 },
+      { name: "Greenland", clue: "World's largest island, mostly covered in ice.", lat: 71.7069, lng: -42.6043 },
+      { name: "Iceland", clue: "Nordic island with geysers and glaciers.", lat: 64.9631, lng: -19.0208 },
+      { name: "Cape Verde", clue: "Island country off West Africa with Creole culture.", lat: 16.5388, lng: -23.0418 },
+      { name: "Japan", clue: "Island nation known for sushi and Mount Fuji.", lat: 36.2048, lng: 138.2529 },
+      { name: "Aleutian Islands", clue: "A chain of volcanic islands stretching from Alaska toward Russia, known for rugged terrain and remote beauty.", lat: 52.8950, lng: -169.1600 }
+
+    ];
+
+    let currentIndex = -1;
+    const map = L.map('map').setView([20, 0], 2);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    function nextClue() {
+      currentIndex++;
+      if (currentIndex >= clues.length) {
+        document.getElementById("location-name").textContent = "🎉 Game Complete!";
+        document.getElementById("clue-text").textContent = "You've placed all pins correctly!";
+        return;
+      }
+      const clue = clues[currentIndex];
+      document.getElementById("location-name").textContent = `Find: ${clue.name}`;
+      document.getElementById("clue-text").textContent = clue.clue;
+    }
+
+    map.on('click', function(e) {
+      if (currentIndex >= clues.length) return;
+
+      const guessLat = e.latlng.lat;
+      const guessLng = e.latlng.lng;
+      const target = clues[currentIndex];
+
+      const distance = getDistance(guessLat, guessLng, target.lat, target.lng);
+      const marker = L.marker([guessLat, guessLng]).addTo(map);
+
+      if (distance < 800) {
+        marker.bindPopup(`✅ Correct! That was ${target.name}.`).openPopup();
+        setTimeout(nextClue, 1500);
+      } else {
+        marker.bindPopup(`❌ Try again! That was too far from ${target.name}.`).openPopup();
+      }
+    });
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function toRad(value) {
+      return value * Math.PI / 180;
+    }
+  </script>
+</body>
+</html>
